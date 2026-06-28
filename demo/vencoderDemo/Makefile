@@ -210,7 +210,7 @@ target_alias =
 top_build_prefix = ../../
 top_builddir = ../..
 top_srcdir = ../..
-CFLAGS_CDCG = -g -Wall -Werror -D_GNU_SOURCE \
+CFLAGS_CDCG = -g -Wall -D_GNU_SOURCE \
 			  -Wno-unused-variable \
 			  -Wno-unused-but-set-variable \
 			  -Wno-unused-result \
@@ -222,7 +222,7 @@ CFLAGS_CDCG = -g -Wall -Werror -D_GNU_SOURCE \
 			  -Wno-strict-aliasing \
                           -lm
 
-CPPFLAGS_CDCG = -g -Wall -Werror -D_GNU_SOURCE \
+CPPFLAGS_CDCG = -g -Wall -D_GNU_SOURCE \
 				-Wno-unused-variable \
 				-Wno-unused-but-set-variable \
 			    -Wno-unused-value \

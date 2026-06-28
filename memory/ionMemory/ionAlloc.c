@@ -319,14 +319,14 @@ void* ion_alloc_palloc(int size, void *veOps, void *pVeopsSelf)
     {
         alloc_data.aw_heap_id_mask = AW_ION_DMA_HEAP_MASK | AW_ION_CARVEOUT_HEAP_MASK;
     }
-    alloc_data.flags = AW_ION_CACHED_FLAG | AW_ION_CACHED_NEEDS_SYNC_FLAG;
+    alloc_data.flags = 0;
 
     #if 0
     #ifdef CONF_KERNEL_VERSION_4_9
          alloc_data.aw_heap_id_mask = AW_ION_DMA_HEAP_MASK | AW_ION_CARVEOUT_HEAP_MASK;
-         alloc_data.flags = AW_ION_CACHED_FLAG | AW_ION_CACHED_NEEDS_SYNC_FLAG;
+         alloc_data.flags = 0;
     #else
-         alloc_data.flags = AW_ION_CACHED_FLAG | AW_ION_CACHED_NEEDS_SYNC_FLAG;
+         alloc_data.flags = 0;
     #endif
     #endif
     ret = ioctl(g_alloc_context->fd, AW_MEM_ION_IOC_ALLOC, &alloc_data);
@@ -750,7 +750,7 @@ void* ion_alloc_alloc_drm(int size, void*veOps, void* pVeopsSelf)
     alloc_data.aw_len = size;
     alloc_data.aw_align = ION_ALLOC_ALIGN ;
     alloc_data.aw_heap_id_mask = AW_ION_SECURE_HEAP_MASK;
-    alloc_data.flags = AW_ION_CACHED_FLAG | AW_ION_CACHED_NEEDS_SYNC_FLAG;
+    alloc_data.flags = 0;
     ret = ioctl(g_alloc_context->fd, AW_MEM_ION_IOC_ALLOC, &alloc_data);
     if (ret)
     {
@@ -984,4 +984,23 @@ struct ScMemOpsS* __GetIonMemOpsS()
 {
     logd("*** get __GetIonMemOpsS ***");
     return &_ionMemOpsS;
+}
+
+/* Added by carplay-linux: export the ION dma-buf fd for a buffer's CPU virtual
+ * address, so an application can hand the decoded frame to DRM via PRIME
+ * (zero-copy display). Upstream sets VideoPicture.nBufFd only on some paths;
+ * the decode FBM path leaves it unset, so we look the fd up in the buffer list
+ * (same lookup the OREO cache-flush uses). Returns the fd, or -1. */
+int ion_alloc_get_dmabuf_fd(void *vir_addr)
+{
+	buffer_node *tmp;
+	unsigned long vir = (unsigned long)vir_addr;
+
+	if (!g_alloc_context)
+		return -1;
+	aw_mem_list_for_each_entry(tmp, &g_alloc_context->list, i_list) {
+		if (vir >= tmp->vir && vir < tmp->vir + tmp->size)
+			return tmp->fd_data.aw_fd;
+	}
+	return -1;
 }
